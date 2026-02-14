@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pettiness Meter</title>
+    <title>How Petty Are You?</title>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -17,14 +17,14 @@
 
         const TRANSLATIONS = {
           "en-US": {
-            "title": "How petty is kk 🥺?",
-            "subtitle": "Share your grievance and let Claude be the judge",
+            "title": "How petty are you?",
+            "subtitle": "Share your grievance and get the verdict",
             "inputLabel": "What's bothering you?",
             "inputPlaceholder": "My roommate ate the last slice of pizza I was saving...",
-            "exampleLoudBreathing": "Sleep Deprived",
+            "exampleLoudBreathing": "Loud breathing",
             "exampleDoorHolding": "Door holding",
             "exampleFishMicrowaver": "Fish microwaver",
-            "exampleWrongTP": "Jatt issue",
+            "exampleWrongTP": "Wrong TP",
             "grievanceLoudBreathing": "My roommate breathes too loudly",
             "grievanceDoorHolding": "Someone didn't say thank you when I held the door",
             "grievanceFishMicrowaver": "My coworker microwaves fish at lunch",
@@ -34,29 +34,7 @@
             "analyzingButton": "Analyzing pettiness...",
             "analysisTitle": "Analysis",
             "adviceTitle": "Advice",
-            "tryAnotherButton": "Try another grievance",
-            "failedAnalysis": "Failed to analyze grievance. Please try again!"
-          },
-          "es-ES": {
-            "title": "¿Qué tan mezquino eres?",
-            "subtitle": "Comparte tu queja y deja que Claude sea el juez",
-            "inputLabel": "¿Qué te molesta?",
-            "inputPlaceholder": "Mi compañero de cuarto se comió la última rebanada de pizza que estaba guardando...",
-            "exampleLoudBreathing": "Respiración fuerte",
-            "exampleDoorHolding": "Sujetar puerta",
-            "exampleFishMicrowaver": "Pescado en microondas",
-            "exampleWrongTP": "Papel higiénico mal",
-            "grievanceLoudBreathing": "Mi compañero de cuarto respira muy fuerte",
-            "grievanceDoorHolding": "Alguien no dijo gracias cuando le sostuve la puerta",
-            "grievanceFishMicrowaver": "Mi compañero de trabajo calienta pescado en el microondas en el almuerzo",
-            "grievanceWrongTP": "Pusieron el rollo de papel higiénico al revés",
-            "errorMessage": "¡Por favor ingresa una queja para analizar!",
-            "analyzeButton": "¡Mide mi mezquindad!",
-            "analyzingButton": "Analizando mezquindad...",
-            "analysisTitle": "Análisis",
-            "adviceTitle": "Consejo",
-            "tryAnotherButton": "Probar otra queja",
-            "failedAnalysis": "Error al analizar la queja. ¡Por favor intenta de nuevo!"
+            "tryAnotherButton": "Try another grievance"
           }
         };
 
@@ -70,7 +48,6 @@
         const locale = findMatchingLocale(browserLocale);
         const t = (key) => TRANSLATIONS[locale]?.[key] || TRANSLATIONS['en-US'][key] || key;
 
-        // Simple AlertCircle icon component
         const AlertCircle = ({ className }) => (
           <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"></circle>
@@ -93,6 +70,7 @@
             { label: t('exampleWrongTP'), text: t('grievanceWrongTP') }
           ];
 
+          // Pettiness analysis logic
           const analyzeGrievance = async () => {
             if (!grievance.trim()) {
               setError(t('errorMessage'));
@@ -102,59 +80,120 @@
             setLoading(true);
             setError('');
 
+            // Simulate processing time
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
             try {
-              const response = await fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  model: "claude-sonnet-4-20250514",
-                  max_tokens: 1000,
-                  messages: [
-                    {
-                      role: "user",
-                      content: `You are a humorous but fair judge of pettiness. Analyze the following grievance and rate it on a scale from 0 to 100, where:
-              - 0-20: Legitimate concern (This is actually serious!)
-              - 21-40: Reasonable gripe (Fair enough, that's annoying)
-              - 41-60: Getting petty (Okay, but maybe chill a bit?)
-              - 61-80: Pretty petty (You might want to let this one go...)
-              - 81-100: Peak pettiness (Seriously? Let it go!)
-
-              Grievance: "${grievance}"
-
-              Respond ONLY with a valid JSON object in this exact format:
-              {
-                "score": [number between 0-100],
-                "category": "[one of the category names above]",
-                "judgment": "[A funny but not mean 1-2 sentence judgment about their grievance]",
-                "advice": "[A humorous but helpful suggestion in 1 sentence]"
-              }
-
-              DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.
-
-              Please respond in ${locale} language`
-                    }
-                  ]
-                })
-              });
-
-              const apiData = await response.json();
-              const text = apiData.content[0].text;
+              const text = grievance.toLowerCase();
               
-              // Clean up the response to extract JSON
-              const jsonMatch = text.match(/\{[\s\S]*\}/);
-              if (!jsonMatch) {
-                throw new Error('No JSON found in response');
+              // Keywords and patterns for analysis
+              const seriousKeywords = ['danger', 'harm', 'hurt', 'safety', 'illegal', 'theft', 'stolen', 'assault', 'threat', 'abuse'];
+              const reasonableKeywords = ['loud', 'smell', 'late', 'mess', 'dirty', 'broken', 'rude', 'unfair', 'fish', 'microwave'];
+              const pettyKeywords = ['breathe', 'breathing', 'chew', 'thank', 'door', 'toilet paper', 'tp', 'seat', 'volume', 'tone'];
+              const veryPettyKeywords = ['looked at', 'glanced', 'smiled', 'didn\'t smile', 'walked', 'stood', 'sat'];
+              
+              let score = 50; // Start at middle
+              
+              // Check for serious issues
+              if (seriousKeywords.some(word => text.includes(word))) {
+                score = Math.max(5, Math.floor(Math.random() * 20));
+              }
+              // Check for reasonable complaints
+              else if (reasonableKeywords.some(word => text.includes(word))) {
+                score = 25 + Math.floor(Math.random() * 25);
+              }
+              // Check for petty complaints
+              else if (pettyKeywords.some(word => text.includes(word))) {
+                score = 55 + Math.floor(Math.random() * 20);
+              }
+              // Check for very petty
+              else if (veryPettyKeywords.some(word => text.includes(word))) {
+                score = 80 + Math.floor(Math.random() * 20);
+              }
+              // Default based on length and punctuation
+              else {
+                const hasExclamation = text.includes('!');
+                const wordCount = text.split(' ').length;
+                
+                if (wordCount < 5) score = 70 + Math.floor(Math.random() * 20);
+                else if (wordCount > 30) score = 20 + Math.floor(Math.random() * 25);
+                else if (hasExclamation) score += 15;
               }
               
-              const data = JSON.parse(jsonMatch[0]);
+              // Determine category
+              let category = '';
+              if (score <= 20) category = 'Legitimate concern';
+              else if (score <= 40) category = 'Reasonable gripe';
+              else if (score <= 60) category = 'Getting petty';
+              else if (score <= 80) category = 'Pretty petty';
+              else category = 'Peak pettiness';
+              
+              // Generate judgment
+              const judgments = {
+                'Legitimate concern': [
+                  "Okay, this actually sounds serious. You're not being petty at all.",
+                  "Yeah, this is a real issue. Anyone would be bothered by this.",
+                  "This is genuinely concerning. You have every right to be upset."
+                ],
+                'Reasonable gripe': [
+                  "Fair enough, that would annoy most people. Not petty!",
+                  "That's legitimately annoying. Your frustration is valid.",
+                  "Yeah, I'd be irritated too. Totally reasonable complaint."
+                ],
+                'Getting petty': [
+                  "Okay, it's a bit annoying, but maybe take a deep breath?",
+                  "I mean... it's not great, but is it really that bad?",
+                  "You're starting to venture into petty territory here, friend."
+                ],
+                'Pretty petty': [
+                  "Come on now, this is pretty petty. Let it go!",
+                  "That's... that's pretty petty, not gonna lie.",
+                  "You might want to let this one slide. Just saying."
+                ],
+                'Peak pettiness': [
+                  "Wow. PEAK pettiness achieved. Congratulations?",
+                  "This is impressively petty. Like, award-winning petty.",
+                  "Really? REALLY? That's what's bothering you?"
+                ]
+              };
+              
+              // Generate advice
+              const advices = {
+                'Legitimate concern': [
+                  "You should definitely address this with the person involved.",
+                  "Talk to them about it - this needs to be resolved.",
+                  "Don't let this slide. Have a conversation about it."
+                ],
+                'Reasonable gripe': [
+                  "Maybe mention it politely if it happens again.",
+                  "Worth bringing up in a friendly way.",
+                  "A gentle conversation could help clear this up."
+                ],
+                'Getting petty': [
+                  "Try to let it go, but if it keeps happening, then speak up.",
+                  "Deep breaths. Pick your battles wisely.",
+                  "Maybe wait and see if it's a pattern before saying anything."
+                ],
+                'Pretty petty': [
+                  "Let it go. Seriously, just let it go.",
+                  "Find something else to focus on. Like literally anything else.",
+                  "Life's too short to stress about this one."
+                ],
+                'Peak pettiness': [
+                  "Please, for your own sake, let this go and never think about it again.",
+                  "Go touch some grass. Clear your head. Move on.",
+                  "This is not worth a single second of your mental energy."
+                ]
+              };
+              
+              const judgment = judgments[category][Math.floor(Math.random() * judgments[category].length)];
+              const advice = advices[category][Math.floor(Math.random() * advices[category].length)];
+              
+              const data = { score, category, judgment, advice };
               setResult(data);
-              
-              // Animate the score
               animateScore(data.score);
             } catch (err) {
-              setError(t('failedAnalysis'));
+              setError('Something went wrong. Please try again!');
               console.error('Error:', err);
             } finally {
               setLoading(false);
@@ -200,7 +239,6 @@
                 </p>
 
                 <div className="bg-white rounded-2xl shadow-xl p-8">
-                  {/* Gauge Meter */}
                   <div className="flex flex-col items-center mb-8">
                     <div className="relative w-80 h-48 mb-4">
                       <svg viewBox="0 0 200 130" className="w-full h-full">
@@ -219,7 +257,7 @@
                           strokeWidth="20"
                           strokeLinecap="round"
                           strokeDasharray={getGaugeFillDasharray(displayScore)}
-                          className="transition-all duration-1500 ease-out"
+                          style={{ transition: 'stroke-dasharray 0.3s ease-out' }}
                         />
                         
                         <text x="28" y="125" textAnchor="middle" className="text-xs font-medium" fill="#45260C">0</text>
@@ -242,7 +280,6 @@
                     </div>
                   </div>
 
-                  {/* Input Section */}
                   <div className="mb-6">
                     <label className="block text-lg font-semibold mb-3" style={{ color: '#45260C' }}>
                       {t('inputLabel')}
@@ -288,7 +325,7 @@
                         <button
                           onClick={analyzeGrievance}
                           disabled={loading}
-                          className="mt-4 w-full py-4 rounded-lg font-bold text-white transition-all transform hover:scale-105"
+                          className="mt-4 w-full py-4 rounded-lg font-bold text-white transition-all transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
                           style={{
                             backgroundColor: loading ? '#F5A854' : '#E68600',
                           }}
@@ -303,9 +340,8 @@
                     )}
                   </div>
 
-                  {/* Results Section */}
                   {result && (
-                    <div className="animate-fadeIn">
+                    <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
                       <div className="border-t border-gray-200 pt-6">
                         <div className="space-y-6">
                           <div>
@@ -357,10 +393,6 @@
                     opacity: 1;
                     transform: translateY(0);
                   }
-                }
-                
-                .animate-fadeIn {
-                  animation: fadeIn 0.5s ease-out;
                 }
               `}</style>
             </div>
